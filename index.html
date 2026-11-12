@@ -568,7 +568,7 @@
                 <label class="field-label" for="answer-field">YOUR RESPONSE</label>
                 <textarea id="answer-field" placeholder="${page.placeholder}">${escapeHtml(answers[page.id] || "")}</textarea>
               `}
-              ${page.type === "actions" ? '<p class="hint">Add up to three actions. You can leave any field blank.</p>' : '<p class="hint">Your response is saved automatically in this browser.</p>'}
+              ${page.type === "actions" ? '<p class="hint">Add up to three actions. You can leave any field blank.</p>' : '<p class="hint">Put each item on a new line. Your response is saved automatically in this browser.</p>'}
           </div>
         </div>
       </section>
@@ -648,6 +648,7 @@
           <p class="small-note">Generated ${new Date().toLocaleString()}</p></div>
           <div class="button-row no-print">
             <button class="win-button" id="edit-answers">‹ Edit answers</button>
+            <button class="win-button" id="copy-report">Copy to clipboard</button>
             <button class="win-button primary" id="print-report">Print / Save PDF</button>
           </div>
         </div>
@@ -661,6 +662,43 @@
     document.getElementById("edit-answers").addEventListener("click", () => {
       currentPage = 0;
       renderPage();
+    });
+    document.getElementById("copy-report").addEventListener("click", async event => {
+      const lines = [];
+      pages.forEach(page => {
+        let items;
+        if (page.type === "actions") {
+          items = answers["next-version"].map(value => value.trim()).filter(Boolean);
+        } else {
+          items = (answers[page.id] || "")
+            .split(/\r?\n/)
+            .map(value => value.trim())
+            .filter(Boolean);
+        }
+        items.forEach(item => lines.push(`${page.title}: ${item}`));
+      });
+      const textToCopy = lines.join("\n\n");
+
+      const button = event.currentTarget;
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(textToCopy);
+        } else {
+          const temporary = document.createElement("textarea");
+          temporary.value = textToCopy;
+          temporary.setAttribute("readonly", "");
+          temporary.style.position = "fixed";
+          temporary.style.opacity = "0";
+          document.body.appendChild(temporary);
+          temporary.select();
+          const copied = document.execCommand("copy");
+          temporary.remove();
+          if (!copied) throw new Error("Clipboard copy was not available");
+        }
+        button.textContent = "Copied!";
+      } catch (error) {
+        button.textContent = "Copy failed";
+      }
     });
     document.getElementById("print-report").addEventListener("click", () => window.print());
     document.getElementById("start-over").addEventListener("click", () => {
