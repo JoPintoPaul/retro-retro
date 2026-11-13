@@ -628,7 +628,7 @@
         <div class="progress-meta"><span>RETROSPECTIVE PROGRESS</span><span>${index + 1} of ${pages.length + 1}</span></div>
         <div class="progress-track" aria-label="Progress">
           ${pages.map((_, i) => `<span class="progress-segment ${i <= index ? "done" : ""}"></span>`).join("")}
-          <span class="progress-segment"></span>
+          <span class="progress-segment ${index >= pages.length ? "done" : ""}"></span>
         </div>
       </div>`;
   }
